@@ -1,114 +1,136 @@
 package com.example.carritodecompras;
 
-import android.app.AlertDialog;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
+import com.example.carritodecompras.adapters.CarritoAdapter;
+import com.example.carritodecompras.models.Producto;
+import com.google.android.material.appbar.MaterialToolbar;
 
 import java.util.ArrayList;
 
 public class CarritoActivity extends AppCompatActivity {
 
-    DatabaseHelper db;
-    ListView listaCarrito;
+    RecyclerView recyclerView;
     TextView txtTotal;
-    Button btnEliminar, btnVaciar, btnVolver, btnVerUbicacion;
-
-    ArrayList<Producto> lista;
-    ArrayAdapter<String> adaptador;
-    Producto productoSeleccionado = null;
+    CarritoAdapter adapter;
+    DatabaseHelper db;
+    ArrayList<Producto> carrito;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_carrito);
 
+        // ---------------------------
+        // CONFIGURACIÓN DE TOOLBAR
+        // ---------------------------
+        MaterialToolbar toolbar = findViewById(R.id.toolbarCarrito);
+        setSupportActionBar(toolbar);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        toolbar.setNavigationOnClickListener(v -> finish());
+
+        // ---------------------------
+        // INICIALIZACIÓN
+        // ---------------------------
         db = new DatabaseHelper(this);
-
-        // Referencias
-        listaCarrito = findViewById(R.id.listaCarrito);
+        recyclerView = findViewById(R.id.recyclerCarrito);
         txtTotal = findViewById(R.id.txtTotal);
-        btnEliminar = findViewById(R.id.btnEliminar);
-        btnVaciar = findViewById(R.id.btnVaciar);
-        btnVolver = findViewById(R.id.btnVolver);
-        btnVerUbicacion = findViewById(R.id.btnVerUbicacion);
 
-        cargarCarrito();
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        // Seleccionar producto
-        listaCarrito.setOnItemClickListener((adapterView, view, i, l) -> {
-            productoSeleccionado = lista.get(i);
-        });
+        carrito = db.obtenerCarrito(); // Se guarda para actualizar
 
-        // Eliminar producto
-        btnEliminar.setOnClickListener(v -> {
-            if (productoSeleccionado == null) {
-                Toast.makeText(this, "Selecciona un producto del carrito", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        adapter = new CarritoAdapter(this, carrito, this::actualizarTotal);
+        recyclerView.setAdapter(adapter);
 
-            new AlertDialog.Builder(this)
-                    .setTitle("Eliminar producto")
-                    .setMessage("¿Deseas eliminar este producto del carrito?")
-                    .setPositiveButton("Sí", (dialog, which) -> {
-                        db.eliminarDelCarrito(productoSeleccionado.getId());
-                        Toast.makeText(this, "Producto eliminado", Toast.LENGTH_SHORT).show();
-                        productoSeleccionado = null;
-                        cargarCarrito();
-                    })
-                    .setNegativeButton("No", null)
-                    .show();
-        });
+        actualizarTotal();
 
-        // Vaciar carrito
-        btnVaciar.setOnClickListener(v -> {
+        // ---------------------------
+        // BOTÓN: Vaciar carrito (con confirmación)
+        // ---------------------------
+        findViewById(R.id.btnVaciar).setOnClickListener(v -> {
             new AlertDialog.Builder(this)
                     .setTitle("Vaciar carrito")
-                    .setMessage("¿Deseas eliminar todos los productos?")
+                    .setMessage("¿Estás seguro de que deseas eliminar todos los productos?")
                     .setPositiveButton("Sí", (dialog, which) -> {
                         db.vaciarCarrito();
-                        Toast.makeText(this, "Carrito vaciado", Toast.LENGTH_SHORT).show();
-                        cargarCarrito();
+                        carrito.clear();
+                        adapter.notifyDataSetChanged();
+                        actualizarTotal();
                     })
-                    .setNegativeButton("No", null)
+                    .setNegativeButton("Cancelar", null)
                     .show();
         });
 
-        // Volver
-        btnVolver.setOnClickListener(v -> {
-            startActivity(new Intent(CarritoActivity.this, ProductosActivity.class));
-            finish();
-        });
+        // ---------------------------
+        // BOTÓN: Volver
+        // ---------------------------
+        findViewById(R.id.btnVolver).setOnClickListener(v -> finish());
 
-        // Ver ubicación
-        btnVerUbicacion.setOnClickListener(v -> {
+        // ---------------------------
+        // BOTÓN: Ver ubicación
+        // ---------------------------
+        findViewById(R.id.btnVerUbicacion).setOnClickListener(v -> {
             Intent intent = new Intent(CarritoActivity.this, UbicacionActivity.class);
             startActivity(intent);
         });
+
+
+        // ---------------------------
+        // SWIPE PARA ELIMINAR ELEMENTO
+        // ---------------------------
+        ItemTouchHelper.SimpleCallback callback = new ItemTouchHelper.SimpleCallback(
+                0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT
+        ) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                int position = viewHolder.getAdapterPosition();
+                Producto p = carrito.get(position);
+
+                db.eliminarDelCarrito(p.getId());
+                carrito.remove(position);
+                adapter.notifyItemRemoved(position);
+
+                actualizarTotal();
+            }
+        };
+
+        new ItemTouchHelper(callback).attachToRecyclerView(recyclerView);
     }
 
-    // Cargar carrito
-    private void cargarCarrito() {
-        lista = db.obtenerCarrito();
-        ArrayList<String> nombres = new ArrayList<>();
-
-        for (Producto p : lista) {
-            nombres.add(p.getNombre() + " - $" + p.getPrecio());
-        }
-
-        adaptador = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, nombres);
-        listaCarrito.setAdapter(adaptador);
-
+    // ---------------------------
+    // ACTUALIZAR TOTAL (con animación)
+    // ---------------------------
+    private void actualizarTotal() {
         double total = db.calcularTotalCarrito();
-        txtTotal.setText("Total: $" + total);
+
+        txtTotal.animate()
+                .scaleX(1.1f)
+                .scaleY(1.1f)
+                .setDuration(150)
+                .withEndAction(() -> {
+                    txtTotal.setText("Total: $" + total);
+                    txtTotal.animate().scaleX(1f).scaleY(1f).setDuration(150);
+                });
     }
 }
-
-
-

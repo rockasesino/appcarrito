@@ -7,61 +7,64 @@
     android:orientation="vertical"
     android:gravity="center"
     android:padding="24dp"
-    android:background="#E8F5E9"
+    android:background="@drawable/bg_tech_gradient"
     tools:context=".MainActivity">
 
     <TextView
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Tienda Online"
-        android:textSize="24sp"
+        android:text="Tech Store"
+        android:textSize="34sp"
         android:textStyle="bold"
-        android:textColor="#1B5E20"
-        android:layout_marginBottom="30dp" />
+        android:textColor="#FFFFFF"
+        android:shadowColor="#88000000"
+        android:shadowRadius="10"
+        android:layout_marginBottom="50dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnLogin"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Iniciar Sesión"
-        android:backgroundTint="#4CAF50"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="16dp" />
+        android:textAllCaps="false"
+        android:layout_marginBottom="18dp"
+        style="@style/Widget.Material3.Button" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnRegistro"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Registrar Usuario"
-        android:backgroundTint="#43A047"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="16dp" />
+        android:textAllCaps="false"
+        android:layout_marginBottom="18dp"
+        style="@style/Widget.Material3.Button.TonalButton" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnProductos"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Ver Productos"
-        android:backgroundTint="#2E7D32"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="16dp" />
+        android:textAllCaps="false"
+        android:layout_marginBottom="18dp"
+        style="@style/Widget.Material3.Button" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnCarrito"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Carrito de Compras"
-        android:backgroundTint="#1B5E20"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="16dp" />
+        android:textAllCaps="false"
+        android:layout_marginBottom="18dp"
+        style="@style/Widget.Material3.Button" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/btnUbicacion"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Ver Ubicación"
-
-        android:backgroundTint="#558B2F"
-        android:textColor="#FFFFFF" />
+        android:textAllCaps="false"
+        style="@style/Widget.Material3.Button.TonalButton" />
 
 </LinearLayout>
+

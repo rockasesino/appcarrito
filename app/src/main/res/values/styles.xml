@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Botón tipo Filled -->
+    <style name="Widget.Material3.Button.Filled" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">#6200EE</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
+    <!-- Botón tipo FilledTonal personalizado -->
+    <style name="Widget.Material3.Button.FilledTonal" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">#03DAC5</item>
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+</resources>

@@ -1,39 +1,74 @@
 package com.example.carritodecompras;
 
+import android.app.ActivityOptions;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
+import android.util.Pair;
+import android.view.animation.AnimationUtils;
+import android.widget.Toast;
+
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.carritodecompras.databinding.ActivityLoginBinding;
 
 public class LoginActivity extends AppCompatActivity {
 
-    Button btnLogin, btnIrRegistro;
+    ActivityLoginBinding binding;
+    DatabaseHelper db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
 
-        btnLogin = findViewById(R.id.btnLogin);
-        btnIrRegistro = findViewById(R.id.btnIrRegistro);
+        binding = ActivityLoginBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Abre la lista de productos
-                Intent intent = new Intent(LoginActivity.this, ProductosActivity.class);
-                startActivity(intent);
-            }
+        db = new DatabaseHelper(this);
+
+        binding.cardLogin.startAnimation(
+                AnimationUtils.loadAnimation(this, R.anim.fade_in)
+        );
+
+        binding.btnLogin.setOnClickListener(v -> validarLogin());
+
+        binding.btnRegistrar.setOnClickListener(v -> {
+            Intent intent = new Intent(LoginActivity.this, RegistroActivity.class);
+
+            ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(
+                    LoginActivity.this,
+                    Pair.create(binding.cardLogin, "transicion_login")
+            );
+
+            startActivity(intent, options.toBundle());
         });
+    }
 
-        btnIrRegistro.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                // Ir a pantalla de registro
-                Intent intent = new Intent(LoginActivity.this, RegistroActivity.class);
-                startActivity(intent);
-            }
-        });
+    private void validarLogin() {
+
+        String email = binding.etEmail.getText().toString().trim();
+        String pass = binding.etPassword.getText().toString().trim();
+
+        if (email.isEmpty()) {
+            binding.inputEmail.setError("Ingresa tu email");
+            return;
+        }
+
+        if (pass.isEmpty()) {
+            binding.inputPassword.setError("Ingresa tu contraseña");
+            return;
+        }
+
+        boolean valido = db.validarUsuario(email, pass);
+
+        if (valido) {
+            Toast.makeText(this, "Bienvenido!", Toast.LENGTH_SHORT).show();
+
+            Intent intent = new Intent(LoginActivity.this, ProductosActivity.class);
+            overridePendingTransition(R.anim.deslizar_derecha, R.anim.desvanecer);
+            startActivity(intent);
+
+        } else {
+            Toast.makeText(this, "Credenciales incorrectas", Toast.LENGTH_SHORT).show();
+        }
     }
 }
